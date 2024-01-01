@@ -53,11 +53,15 @@ async def register(interaction: discord.Interaction, username: str):
 @app_commands.describe(amount="The amount you have deposited", screenshot="The screenshot of your deposit (/db deposit WFB <amount)")
 async def depsiit(interaction: discord.Interaction, amount: float, screenshot: discord.Attachment):
   id = interaction.user.id
-  with open(".datalusers_balance.json") as f:
+  with open(".data/users_balance.json") as f:
     users_balance = json.load(f)
   if not id in users_balance:
-    print("You don't have an account yet")
-  else:
+    await interaction.response.send_message("You don't have an account yet", ephemeral=True)
+  elif amount == 0:
+    await interaction.response.send_message("You can't deposit 0", ephemeral=True)
+  elif amount < 0:
+    await interaction.response.send_message("Yoy can't deposit negative number", ephemeral=True)
+  elif amount > 0 and amount != 0:
     with open(".data/pending_transactions.json") as file:
       pending_transactions = json.load(file)
     transaction_id = users_balance["latest_transaction_id"] + 1
@@ -80,8 +84,8 @@ async def depsiit(interaction: discord.Interaction, amount: float, screenshot: d
       json.dump(users_balance, f, indent=2)
     with open(".data/pending_transactions.json", "w") as file:
       json.dump(pending_transactions,  file, indent=2)
-    print("Sucessfully deposited, please wait till its accepted")
+    embed = discord.Embed(title="Deposit request sent!", description=f"Your deposit request has been sent, please wait till it's accepted\nTransaction ID: {transaction_id}", color=0x00ff00)
+    embed.set_footer(text="You can use /transaction history to view the transaction history too!")
+    await interaction.response.send_message(embed=embed, ephemeral=True)
     
-  
-
 bot.run(os.getenv("TOKEN"))
